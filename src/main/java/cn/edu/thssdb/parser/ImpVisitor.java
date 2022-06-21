@@ -5,10 +5,14 @@ package cn.edu.thssdb.parser;
 
 import cn.edu.thssdb.exception.DatabaseNotExistException;
 import cn.edu.thssdb.query.QueryResult;
+import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Database;
 import cn.edu.thssdb.schema.Manager;
+import cn.edu.thssdb.type.ColumnType;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * When use SQL sentence, e.g., "SELECT avg(A) FROM TableX;"
@@ -122,10 +126,80 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
     /**
      * TODO
-     创建表格
+     * 创建表格
      */
     @Override
-    public String visitCreate_table_stmt(SQLParser.Create_table_stmtContext ctx) {return null;}
+    public String visitCreate_table_stmt(SQLParser.Create_table_stmtContext ctx) {
+        try {
+            if (manager.currentDatabase == null) {
+                throw new DatabaseNotExistException();
+            }
+
+            String table_name = ctx.table_name().getText().toLowerCase();
+
+            int column_counts = ctx.column_def().size();
+            // Column(String name, ColumnType type, int primary, boolean notNull, int maxLength)
+            Column[] columns = new Column[column_counts];
+            System.out.printf("column_counts = %d\n", column_counts);
+
+//            int primary_keys_counts = ctx.table_constraint().column_name().size();
+
+            for (int i = 0; i < column_counts; i++) {
+                ColumnType type;
+                String name = ctx.column_def().get(i).column_name().getText();
+
+                List<ParseTree> type_children = ctx.column_def().get(i).type_name().children;
+                String tmp = type_children.get(0).getText().toLowerCase();
+                boolean is_not_null = false;
+                int is_primary_key = 0;
+                int max_length = 0;
+
+                System.out.println("2");
+                switch (tmp) {
+                    case "int":
+                        type = ColumnType.INT;
+                        break;
+                    case "long":
+                        type = ColumnType.LONG;
+                        break;
+                    case "double":
+                        type = ColumnType.DOUBLE;
+                        break;
+                    case "string":
+                        type = ColumnType.STRING;
+                        max_length = Integer.parseInt(type_children.get(2).getText());
+                        break;
+                    default:
+                        type = ColumnType.DOUBLE;
+                        System.out.println("Wrong Type!");
+                }
+
+
+
+
+                List<SQLParser.Column_constraintContext> column_constraint_list = ctx.column_def().get(i).column_constraint();
+                for (int j = 0; j < column_constraint_list.size(); j++) {
+                    if (column_constraint_list.get(j).K_NOT() != null) {
+                        //存在not null结点
+                        is_not_null = true;
+                    }
+                    if (column_constraint_list.get(j).K_PRIMARY() != null) {
+                        is_primary_key = 1;
+                    }
+                }
+
+                columns[i] = new Column(name, type, is_primary_key, is_not_null, max_length);
+            }
+            System.out.println("");
+        } catch (DatabaseNotExistException e) {
+            throw new RuntimeException(e);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException(e);
+        }
+//        manager.getCurrentDatabase().create(table_name, columns);
+        return "create table " + " successfully";
+    }
+
 
     /**
      * TODO
