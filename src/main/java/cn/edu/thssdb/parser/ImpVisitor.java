@@ -8,6 +8,8 @@ import cn.edu.thssdb.query.QueryResult;
 import cn.edu.thssdb.schema.Database;
 import cn.edu.thssdb.schema.Manager;
 
+import java.util.ArrayList;
+
 /**
  * When use SQL sentence, e.g., "SELECT avg(A) FROM TableX;"
  * the parser will generate a grammar tree according to the rules defined in SQL.g4.
@@ -39,6 +41,16 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             throw new DatabaseNotExistException();
         }
         return currentDB;
+    }
+
+    public Object visitParse(SQLParser.ParseContext ctx) {
+        return visitSql_stmt_list(ctx.sql_stmt_list());
+    }
+
+    public Object visitSql_stmt_list(SQLParser.Sql_stmt_listContext ctx) {
+        ArrayList<QueryResult> ret = new ArrayList<>();
+        for (SQLParser.Sql_stmtContext subCtx : ctx.sql_stmt()) ret.add(visitSql_stmt(subCtx));
+        return ret;
     }
 
     public QueryResult visitSql_stmt(SQLParser.Sql_stmtContext ctx) {
