@@ -11,8 +11,10 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.locks.Condition;
 
 /**
  * When use SQL sentence, e.g., "SELECT avg(A) FROM TableX;"
@@ -224,6 +226,13 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             int column_count = table.columns.size();
             String show_data = "[" + table_name + "]\n";//表头
 
+           // table.takeSLock(session, manager);
+            Iterator<Row> rowIterator = table.iterator();
+            while (rowIterator.hasNext()) {
+                Row row = rowIterator.next();
+                System.out.println(row.toString());
+            }
+
             for (int i = 0; i < column_count; i++) {
                 Column colunm_item = table.columns.get(i);
 
@@ -255,6 +264,8 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public String visitInsert_stmt(SQLParser.Insert_stmtContext ctx) {
+
+        System.out.println(Thread.currentThread().getName());
         String table_name = ctx.table_name().getText().toLowerCase();
         Table table = GetCurrentDB().get(table_name);
 
@@ -316,7 +327,8 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             }
 
             Row new_row = new Row(cells);
-            table.insert(new_row);
+
+            table.insert(new_row,manager,session);
 
         } else {
 
@@ -332,11 +344,14 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             }
 
             Row new_row = new Row(cells);
-            table.insert(new_row);
+
+
+            table.takeXLock(session,manager);
+            table.insert(new_row,manager,session);
 
         }
 
-        return "Insert into " + table_name + ".";
+       return "Insert into " + table_name + ".";
     }
 
     /**
@@ -345,6 +360,13 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public String visitDelete_stmt(SQLParser.Delete_stmtContext ctx) {
+        String table_name = ctx.table_name().getText().toLowerCase();
+        Table table = GetCurrentDB().get(table_name);
+        SQLParser.Multiple_conditionContext multiple_condition = ctx.multiple_condition();
+        String attrName = ctx.multiple_condition().condition().expression(0).comparer().column_full_name().column_name().getText().toLowerCase();
+        String attrValue = ctx.multiple_condition().condition().expression(1).comparer().literal_value().getText();
+
+
         return null;
     }
 

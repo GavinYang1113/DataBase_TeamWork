@@ -68,6 +68,7 @@ public class SQLHandler {
                     ArrayList<String> table_list = manager.x_lockDict.get(session);
                     for (String table_name : table_list) {
                         Table currentTable = currentDB.get(table_name);
+                        currentTable.releaseSLock(session);
                         currentTable.releaseXLock(session);
                     }
                     table_list.clear();

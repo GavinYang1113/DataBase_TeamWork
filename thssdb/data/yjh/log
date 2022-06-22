@@ -1,99 +1,129 @@
 begin transaction
-insert into ddd values (,2)
+insert into ddd values (
 commit
 begin transaction
 insert into ddd values (1,2)
 commit
 begin transaction
-insert into ddd values (,3)
+insert into ddd values (
 commit
 begin transaction
-insert into ddd values (1,3)
+insert into ddd values (2,3)
 commit
 begin transaction
+insert into ddd values (
+insert into ddd values (22,33)
+begin transaction
+insert into ddd values (
 insert into ddd values (1,2)
+insert into ddd values (3,2)
+begin transaction
+insert into ddd values (123,31)
+insert into ddd values (123,31)
+insert into ddd values (1223,31)
+insert into ddd values (1234,31)
+insert into ddd values (1234,31)
+begin transaction
+insert into ddd values (11,33)
+insert into ddd values (11,33)
+begin transaction
+insert into ddd values(312,33)
 commit
 begin transaction
-insert into ddd values (1,2)
+insert into ddd values (34,34)
+insert into ddd values (36,34)
+insert into ddd values (36,34)
+insert into ddd values (39,34)
+begin transaction
+insert into ddd values (13,34)
 commit
 begin transaction
-insert into ddd values (1,2)
+insert into ddd values (133,34)
 commit
 begin transaction
-insert into ddd values (1,2)
+insert into ddd value (
+insert into ddd value (23,44)
+insert into ddd values (23,44)
+begin transaction
+insert table ddd values(3,4)
 commit
 begin transaction
-insert into ddd values (2,2)
+insert into ddd values(3,4)
+commit
 commit
 begin transaction
-insert into ddd values (1,2)
+insert into ddd values(31,4)
 commit
 begin transaction
-insert into ddd values (2,2)
+insert into ddd values(32,4)
 commit
 begin transaction
-insert into ddd values (2,2)
+insert into ddd values(332,4)
 commit
 begin transaction
-insert into ddd values (2,2)
+insert into ddd values (13,4)
 commit
 begin transaction
-insert into ddd(dddd) values (3)
+insert into ddd values (13,4)
+begin transaction
+insert into ddd values (123,321)
+insert into ddd values (124,321)
 commit
 begin transaction
-insert into ddd(dd) values (3)
+insert into ddd values (123,321)
+begin transaction
+insert into ddd values (119,12)
 commit
 begin transaction
-insert into ddd(dd) values (3)
+insert into ddd values(12,123)
 commit
 begin transaction
-insert into ddd(dd) valus (1)
+insert into ddd values (555,4)
+begin transaction
+insert into ddd values(128,1)
+begin transaction
+insert into ddd values (452,1)
+begin transaction
+insert into ddd values (
 commit
 begin transaction
-insert into ddd(dd) values (1)
+insert into ddd values (341,44)
+begin transaction
+insert into ddd values (384,1)
+begin transaction
+insert into ddd values (495,45)
+begin transaction
+insert into ddd values (34,3)
 commit
 begin transaction
-insert into ddd(dd) values (1)
+insert into ddd values (3904,3)
 commit
 begin transaction
-insert into ddd(ddd,dd) values (4,1)
+insert into ddd values (34,4)
+insert into ddd values (341,4)
+begin transaction
+insert into ddd values (89,32)
 commit
 begin transaction
-insert into ddd(ddd,dd) values (4,1)
+insert into ddd values (98,9)
+insert into ddd values (908,9)
 commit
 begin transaction
-insert into ddd (dd,ddd) values(1,2)
+insert into ddd values (908,9)
 commit
 begin transaction
-insert into ddd(dd,dd) values (1,2)
+insert into ddd values (981,9)
 commit
 begin transaction
-insert into ddd(ddddd,dd) values (1,2)
+insert into ddd values (45,1)
 commit
 begin transaction
-insert into ddd(ddd) values (1,2)
+insert into ddd values (745,1)
+insert into ddd values (66,1)
 commit
 begin transaction
-insert into ddd(ddd) values ()
+insert into ddd values (6996,1)
 commit
 begin transaction
-insert into ddd(ddd) values (2)
-commit
-begin transaction
-insert into ddd(dd,ddd) values (2)
-commit
-begin transaction
-insert into ddd(dd,ddd) values (2,3)
-commit
-begin transaction
-insert into ddd(dd,ddd,dd) values (2,3,3)
-commit
-begin transaction
-insert into ddd(dd,ddd,dddd) values (2,3,3)
-commit
-begin transaction
-insert into ddd values (3)
-commit
-begin transaction
-insert into ddd values (3,3)
+insert into ddd values (6996,1)
 commit

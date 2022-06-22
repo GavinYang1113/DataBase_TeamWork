@@ -20,12 +20,11 @@ public class Database {
 
   private String databaseName;
   private HashMap<String, Table> tableMap;
-  ReentrantReadWriteLock lock;
+  private static ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
   public Database(String databaseName) {
     this.databaseName = databaseName;
     this.tableMap = new HashMap<>();
-    this.lock = new ReentrantReadWriteLock();
     File tableFolder = new File(this.getDatabaseTableFolderPath());
     if(!tableFolder.exists())
       tableFolder.mkdirs();
@@ -150,12 +149,10 @@ public class Database {
 
   public void quit() {
     try {
-      this.lock.writeLock().lock();
       for (Table table : this.tableMap.values())
         table.persist();
       this.persist();
     } finally {
-      this.lock.writeLock().unlock();
     }
   }
 
