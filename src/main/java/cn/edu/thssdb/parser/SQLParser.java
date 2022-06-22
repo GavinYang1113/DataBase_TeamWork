@@ -785,6 +785,8 @@ public class SQLParser extends Parser {
 		}
 	}
 
+
+
 	public final Create_table_stmtContext create_table_stmt() throws RecognitionException {
 		Create_table_stmtContext _localctx = new Create_table_stmtContext(_ctx, getState());
 		enterRule(_localctx, 14, RULE_create_table_stmt);

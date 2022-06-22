@@ -1,0 +1,5 @@
+begin transaction
+insert into ddd values (,2)
+commit
+begin transaction
+insert into ddd values (1,2)

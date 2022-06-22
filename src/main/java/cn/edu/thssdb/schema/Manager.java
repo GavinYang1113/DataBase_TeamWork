@@ -31,6 +31,7 @@ public class Manager {
     // TODO: init possible additional variables
     databases = new HashMap<>();
     currentDatabase = null;
+    currentSessions=new ArrayList<Long>();
     sqlHandler = new SQLHandler(this);
     x_lockDict = new HashMap<>();
     File managerFolder = new File(Global.DBMS_DIR + File.separator + "data");

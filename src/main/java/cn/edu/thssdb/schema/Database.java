@@ -65,6 +65,11 @@ public class Database {
     }
   }
 
+  /**
+   * 获取对应的表
+   * @param tableName
+   * @return
+   */
   public Table get(String tableName) {
     try {
       // TODO add lock control.
