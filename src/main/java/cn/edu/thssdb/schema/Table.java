@@ -24,6 +24,8 @@ public class Table implements Iterable<Row> {
   public BPlusTree<Cell, Row> index;
   private int primaryIndex;
 
+  public int getPrimaryIndex() { return this.primaryIndex; }
+
   // ADD lock variables for S, X locks and etc here.
 
   // TODO: table/tuple level locks

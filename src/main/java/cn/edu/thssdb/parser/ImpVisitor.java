@@ -5,13 +5,10 @@ package cn.edu.thssdb.parser;
 
 import cn.edu.thssdb.exception.DatabaseNotExistException;
 import cn.edu.thssdb.query.QueryResult;
-import cn.edu.thssdb.schema.Column;
-import cn.edu.thssdb.schema.Database;
-import cn.edu.thssdb.schema.Manager;
-import cn.edu.thssdb.schema.Table;
+import cn.edu.thssdb.schema.*;
 import cn.edu.thssdb.type.ColumnType;
 import org.antlr.v4.runtime.tree.ParseTree;
-
+import cn.edu.thssdb.schema.Column.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -285,9 +282,49 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      * TODO
      * 表格项更新
      */
+    public int getColumnIndex(Table table, String target) {
+        for(int i = 0; i < table.columns.size(); i ++)
+            if(table.columns.get(i).getColumnName().equals(target))
+                return i;
+        return -1;
+    }
+
     @Override
     public String visitUpdate_stmt(SQLParser.Update_stmtContext ctx) {
-        return null;
+        try {
+            String table_name = ctx.table_name().getText().toLowerCase();
+            String update_name = ctx.column_name().getText().toLowerCase();
+            String update_value = ctx.expression().comparer().literal_value().getText();
+
+
+            // 需要 update 的 column 索引
+            Table table = GetCurrentDB().get(table_name);
+            int update_index = getColumnIndex(table, update_name);
+            if(update_index < 0) throw new Exception("Fail to find column " + update_name);
+
+
+            String condition_name = ctx.multiple_condition().condition().expression(0).comparer().column_full_name().column_name().getText().toLowerCase();
+            String condition_value = ctx.multiple_condition().condition().expression(1).comparer().literal_value().getText();
+
+            // 需要 where 的 column 并不存在, 抛出异常
+            if(getColumnIndex(table, condition_name) < 0) throw new Exception("Fail to find column " + condition_name);
+
+
+            ArrayList<Row> update_rows = new ArrayList<>();
+
+            for(Row row: update_rows) {
+                // void update(Cell primaryCell, Row newRow)
+                ArrayList<Cell> entries = new ArrayList<>(row.getEntries());
+                entries.set(update_index, Column.parseEntry(update_value, table.columns.get(update_index)));
+                table.update(row.getEntries().get(table.getPrimaryIndex()), new Row(entries));
+            }
+
+            System.out.println("test");
+
+            return "Update table " + table_name + ".";
+        }catch (Exception e) {
+            return e.getMessage();
+        }
     }
 
     /**
