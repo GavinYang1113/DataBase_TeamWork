@@ -165,14 +165,16 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
                 //处理属性定义紧接着的约束声明：not null 和 primary key
                 List<SQLParser.Column_constraintContext> column_constraint_list = ctx.column_def().get(i).column_constraint();
-                for (int j = 0; j < column_constraint_list.size(); j++) {
-                    if (column_constraint_list.get(j).K_NOT() != null) {
-                        //存在not null结点
-                        is_not_null = false;
-                    }
-                    if (column_constraint_list.get(j).K_PRIMARY() != null) {
-                        //primary key
-                        is_primary_key = 1;
+                if (column_constraint_list != null) {
+                    for (int j = 0; j < column_constraint_list.size(); j++) {
+                        if (column_constraint_list.get(j).K_NOT() != null) {
+                            //存在not null结点
+                            is_not_null = false;
+                        }
+                        if (column_constraint_list.get(j).K_PRIMARY() != null) {
+                            //primary key
+                            is_primary_key = 1;
+                        }
                     }
                 }
                 res_columns[i] = new Column(name, type, is_primary_key, is_not_null, max_length);
@@ -181,13 +183,16 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             //处理在语句末尾定义的primary key
             SQLParser.Table_constraintContext table_constraints = ctx.table_constraint();
             List<SQLParser.Column_nameContext> primary_key_attr_list = table_constraints.column_name();
-            for (Column res_item : res_columns) {
-                for (SQLParser.Column_nameContext key_item : primary_key_attr_list) {
-                    if (res_item.getColumnName().equals(key_item.children.get(0).getText())) {
-                        res_item.setPrimary(1);
+            if (res_columns != null) {
+                for (Column res_item : res_columns) {
+                    for (SQLParser.Column_nameContext key_item : primary_key_attr_list) {
+                        if (res_item.getColumnName().equals(key_item.children.get(0).getText())) {
+                            res_item.setPrimary(1);
+                        }
                     }
                 }
             }
+
 
             //如果是主键则必须为Not Null
             for (Column res_item : res_columns) {
@@ -257,12 +262,11 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         List<SQLParser.Column_nameContext> column_list = ctx.column_name();//属性名
         List<SQLParser.Value_entryContext> value_list = ctx.value_entry();//值
 
-        if(column_list.size()>0){
+        if (column_list.size() > 0) {
 
-        }else{
+        } else {
 
         }
-
 
 
         return null;
