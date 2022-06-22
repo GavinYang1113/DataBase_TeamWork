@@ -362,10 +362,10 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             if(comparator == null) {
                 flag = true;
             } else if (comparator.EQ() != null) {
-                if (columnValue.compareTo(cell_compare_value) < 0)
+                if (columnValue.compareTo(cell_compare_value) == 0)
                     flag = true;
             } else if(comparator.NE() != null) {
-                if (columnValue.compareTo(cell_compare_value) > 0)
+                if (columnValue.compareTo(cell_compare_value) != 0)
                     flag = true;
             } else if(comparator.LE() != null) {
                 if (columnValue.compareTo(cell_compare_value) <= 0)
@@ -374,10 +374,10 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
                 if (columnValue.compareTo(cell_compare_value) >= 0)
                     flag = true;
             } else if(comparator.LT() != null) {
-                if (columnValue.compareTo(cell_compare_value) == 0)
+                if (columnValue.compareTo(cell_compare_value) < 0)
                     flag = true;
             } else if(comparator.GT() != null) {
-                if (columnValue.compareTo(cell_compare_value) != 0)
+                if (columnValue.compareTo(cell_compare_value) > 0)
                     flag = true;
             }
             if (flag) {
