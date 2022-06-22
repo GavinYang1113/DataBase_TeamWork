@@ -3,16 +3,21 @@ package cn.edu.thssdb.parser;
 
 // TODO: add logic for some important cases, refer to given implementations and SQLBaseVisitor.java for structures
 
-import cn.edu.thssdb.exception.*;
+import cn.edu.thssdb.exception.DatabaseNotExistException;
 import cn.edu.thssdb.query.QueryResult;
+import cn.edu.thssdb.query.QueryTable;
 import cn.edu.thssdb.schema.*;
 import cn.edu.thssdb.type.ColumnType;
+import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.tree.ParseTree;
 import cn.edu.thssdb.schema.Column.*;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+
+import static cn.edu.thssdb.schema.Column.parseEntry;
 
 /**
  * When use SQL sentence, e.g., "SELECT avg(A) FROM TableX;"
@@ -251,92 +256,22 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     /**
      * TODO
      * 表格项插入
-     * 此处不检查主键重复，table.insert里已实现
      */
     @Override
     public String visitInsert_stmt(SQLParser.Insert_stmtContext ctx) {
         String table_name = ctx.table_name().getText().toLowerCase();
         Table table = GetCurrentDB().get(table_name);
+        List<SQLParser.Column_nameContext> column_list = ctx.column_name();//属性名
+        List<SQLParser.Value_entryContext> value_list = ctx.value_entry();//值
 
-        List<SQLParser.Column_nameContext> attribute_list = ctx.column_name();//属性名
-        ArrayList<String> attribute_name_list = new ArrayList<String>();//将属性名转为String的List
-        for (SQLParser.Column_nameContext attribute_item : attribute_list) {
-            if (attribute_name_list.contains(attribute_item.getText())) {
-                return new DuplicateColumnException(attribute_item.getText()).getMessage();
-            }
-            attribute_name_list.add(attribute_item.getText());
-        }
-
-        // 插入的具体值，这里的逻辑是：拿到values的第一个儿子（实际上只会有一个，因为只会插入一行），
-        // 再获取其中有用的值（去除括号、逗号）
-        List<SQLParser.Literal_valueContext> value_list = ctx.value_entry().get(0).literal_value();
-
-
-        if (attribute_list.size() > 0) {
-            //指定插入属性列，需要在对应位置插入值
-
-            //如果插入数据个数与声明的属性个数不同
-            if (value_list.size() != attribute_list.size()) {
-                return new SchemaLengthMismatchException(attribute_list.size(), value_list.size(), "").getMessage();
-            }
-
-            ArrayList<Cell> cells = new ArrayList<Cell>();
-
-            //遍历，找到声明属性在表中对应的列
-            //检查primary key列必须被赋值
-            for (Column column_item : table.columns) {
-                boolean temp_find = false;
-                String value = "null";
-
-                for (int i = 0; i < attribute_name_list.size(); i++) {
-                    if (attribute_name_list.get(i).equals(column_item.getColumnName())) {
-                        temp_find = true;
-                        value = value_list.get(i).getText();
-                        break;
-                    }
-                }
-                cells.add(Column.parseEntry(value, column_item));
-                if (column_item.isPrimary() && !temp_find) {
-                    return new NullValueException(column_item.getColumnName()).getMessage();
-                }
-            }
-
-            //存在声明的属性，没有在table.column中找到它
-            for (int i = 0; i < attribute_name_list.size(); i++) {
-                boolean temp_find = false;
-                for (Column column_item : table.columns) {
-                    if (attribute_name_list.get(i).equals(column_item.getColumnName())) {
-                        temp_find = true;
-                        break;
-                    }
-                }
-                if (!temp_find) {
-                    return new ColumnNotExistException(attribute_name_list.get(i).toString().toLowerCase()).getMessage();
-                }
-            }
-
-            Row new_row = new Row(cells);
-            table.insert(new_row);
+        if (column_list.size() > 0) {
 
         } else {
 
-            //没有指定插入列，需要全部插入
-            if (value_list.size() != table.columns.size()) {
-                return (new SchemaLengthMismatchException(table.columns.size(), value_list.size(), "")).getMessage();
-            }
-            ArrayList<Cell> cells = new ArrayList<Cell>();
-
-            //遍历，转化为对应类型，并插入到cells中
-            for (int i = 0; i < value_list.size(); i++) {
-                cells.add(Column.parseEntry(value_list.get(i).getText(), table.columns.get(i)));//值与列对应起来
-            }
-
-            Row new_row = new Row(cells);
-            table.insert(new_row);
-
         }
 
-        return "Insert into " + table_name + ".";
+
+        return null;
     }
 
     /**
@@ -385,7 +320,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             for(Row row: update_rows) {
                 // void update(Cell primaryCell, Row newRow)
                 ArrayList<Cell> entries = new ArrayList<>(row.getEntries());
-                entries.set(update_index, Column.parseEntry(update_value, table.columns.get(update_index)));
+                entries.set(update_index, parseEntry(update_value, table.columns.get(update_index)));
                 table.update(row.getEntries().get(table.getPrimaryIndex()), new Row(entries));
             }
 
@@ -401,8 +336,60 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      * TODO
      * 表格项查询
      */
+    public QueryTable get_table(SQLParser.Table_queryContext query) {
+        return null;
+    }
+    public static int get_column_index (ArrayList<Column> columns, String column_name) {
+        for (int i = 1; i < columns.size(); i++) {
+            if (columns.get(i).getColumnName().equals(column_name)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    public static ArrayList<Row> filter (Iterator<Row> it, ArrayList<Column> columns, SQLParser.ConditionContext condition){
+        ArrayList<Row> return_array_list = new ArrayList<>();
+        String column_name = condition.expression().get(0).comparer().column_full_name().column_name().getText().toLowerCase();
+        int column_index = get_column_index(columns, column_name);
+        SQLParser.ComparatorContext comparator = condition.comparator();
+        String compare_value = condition.expression().get(1).comparer().literal_value().getText();
+        Cell cell_compare_value = parseEntry(compare_value, columns.get(column_index));
+
+        while (it.hasNext()) {
+            Row row = it.next();
+            Cell columnValue = row.getEntries().get(column_index);
+            boolean flag = false;
+            if(comparator == null) {
+                flag = true;
+            } else if (comparator.EQ() != null) {
+                if (columnValue.compareTo(cell_compare_value) < 0)
+                    flag = true;
+            } else if(comparator.NE() != null) {
+                if (columnValue.compareTo(cell_compare_value) > 0)
+                    flag = true;
+            } else if(comparator.LE() != null) {
+                if (columnValue.compareTo(cell_compare_value) <= 0)
+                    flag = true;
+            } else if(comparator.GE() != null) {
+                if (columnValue.compareTo(cell_compare_value) >= 0)
+                    flag = true;
+            } else if(comparator.LT() != null) {
+                if (columnValue.compareTo(cell_compare_value) == 0)
+                    flag = true;
+            } else if(comparator.GT() != null) {
+                if (columnValue.compareTo(cell_compare_value) != 0)
+                    flag = true;
+            }
+            if (flag) {
+                return_array_list.add(row);
+            }
+        }
+        return return_array_list;
+    }
+
     @Override
     public QueryResult visitSelect_stmt(SQLParser.Select_stmtContext ctx) {
+
         return null;
     }
 
