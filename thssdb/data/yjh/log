@@ -97,3 +97,24 @@ commit
 begin transaction
 insert into ddd values (3,3)
 commit
+begin transaction
+update ddd set dddd=2 where dd=1
+commit
+begin transaction
+update ddd set dddd=3 where dd=1
+commit
+begin transaction
+update ddd set dddd=2 where dd=1
+commit
+begin transaction
+update ddd set dddd=2 where dd=1
+commit
+begin transaction
+update ddd set dddd=2 where dd=1
+commit
+begin transaction
+update ddd set dddd=2 where dd=1
+commit
+begin transaction
+update ddd set dddd=2 where dd=1
+commit

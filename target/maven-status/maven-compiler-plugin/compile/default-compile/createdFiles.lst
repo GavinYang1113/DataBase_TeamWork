@@ -46,7 +46,9 @@ cn\edu\thssdb\exception\KeyNotExistException.class
 cn\edu\thssdb\rpc\thrift\ConnectReq$ConnectReqTupleSchemeFactory.class
 cn\edu\thssdb\rpc\thrift\IService$1.class
 cn\edu\thssdb\rpc\thrift\IService$AsyncIface.class
+cn\edu\thssdb\exception\ColumnNotExistException.class
 cn\edu\thssdb\rpc\thrift\IService$getTime_args$getTime_argsTupleScheme.class
+cn\edu\thssdb\exception\DuplicateColumnException.class
 cn\edu\thssdb\rpc\thrift\IService$disconnect_result.class
 cn\edu\thssdb\rpc\thrift\DisconnetResp$DisconnetRespStandardSchemeFactory.class
 cn\edu\thssdb\exception\MultiPrimaryKeyException.class

@@ -287,7 +287,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      * TODO
      * 表格项更新
      */
-    public int getColumnIndex(Table table, String target) {
+    public static int getColumnIndex(Table table, String target) {
         for(int i = 0; i < table.columns.size(); i ++)
             if(table.columns.get(i).getColumnName().equals(target))
                 return i;
@@ -301,21 +301,20 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             String update_name = ctx.column_name().getText().toLowerCase();
             String update_value = ctx.expression().comparer().literal_value().getText();
 
-
             // 需要 update 的 column 索引
             Table table = GetCurrentDB().get(table_name);
             int update_index = getColumnIndex(table, update_name);
             if(update_index < 0) throw new Exception("Fail to find column " + update_name);
 
-
             String condition_name = ctx.multiple_condition().condition().expression(0).comparer().column_full_name().column_name().getText().toLowerCase();
-            String condition_value = ctx.multiple_condition().condition().expression(1).comparer().literal_value().getText();
-
-            // 需要 where 的 column 并不存在, 抛出异常
             if(getColumnIndex(table, condition_name) < 0) throw new Exception("Fail to find column " + condition_name);
 
-
-            ArrayList<Row> update_rows = new ArrayList<>();
+            ArrayList<Row> update_rows;
+            if(ctx.K_WHERE() != null) {
+                update_rows = filter(table.iterator(), table.columns, ctx.multiple_condition().condition());
+            }else {
+                update_rows = filter(table.iterator(), table.columns, null);
+            }
 
             for(Row row: update_rows) {
                 // void update(Cell primaryCell, Row newRow)
@@ -324,10 +323,9 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
                 table.update(row.getEntries().get(table.getPrimaryIndex()), new Row(entries));
             }
 
-            System.out.println("test");
-
             return "Update table " + table_name + ".";
         }catch (Exception e) {
+            System.out.println("error fuck!");
             return e.getMessage();
         }
     }
@@ -340,7 +338,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         return null;
     }
     public static int get_column_index (ArrayList<Column> columns, String column_name) {
-        for (int i = 1; i < columns.size(); i++) {
+        for (int i = 0; i < columns.size(); i++) {
             if (columns.get(i).getColumnName().equals(column_name)) {
                 return i;
             }
