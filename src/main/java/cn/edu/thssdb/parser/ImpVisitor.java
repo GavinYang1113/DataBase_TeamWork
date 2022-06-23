@@ -172,7 +172,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
                     for (int j = 0; j < column_constraint_list.size(); j++) {
                         if (column_constraint_list.get(j).K_NOT() != null) {
                             //存在not null结点
-                            is_not_null = false;
+                            is_not_null = true;
                         }
                         if (column_constraint_list.get(j).K_PRIMARY() != null) {
                             //primary key
@@ -185,12 +185,14 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
             //处理在语句末尾定义的primary key
             SQLParser.Table_constraintContext table_constraints = ctx.table_constraint();
-            List<SQLParser.Column_nameContext> primary_key_attr_list = table_constraints.column_name();
-            if (res_columns != null) {
-                for (Column res_item : res_columns) {
-                    for (SQLParser.Column_nameContext key_item : primary_key_attr_list) {
-                        if (res_item.getColumnName().equals(key_item.children.get(0).getText())) {
-                            res_item.setPrimary(1);
+            if (table_constraints != null) {
+                List<SQLParser.Column_nameContext> primary_key_attr_list = table_constraints.column_name();
+                if (res_columns != null) {
+                    for (Column res_item : res_columns) {
+                        for (SQLParser.Column_nameContext key_item : primary_key_attr_list) {
+                            if (res_item.getColumnName().equals(key_item.children.get(0).getText())) {
+                                res_item.setPrimary(1);
+                            }
                         }
                     }
                 }
@@ -367,7 +369,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         if (getColumnIndex(table, condition_name) < 0) {
             return new Exception("Fail to find column " + condition_name).toString();
         }
-        
+
         if (ctx.K_WHERE() != null) {
             table.takeXLock(session, manager);
             ArrayList<Row> update_rows = filter(table.iterator(), table.columns, ctx.multiple_condition().condition());
@@ -421,12 +423,12 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             }
             table.releaseSLock(session);
 
-            if(update_rows.isEmpty()) {
+            if (update_rows.isEmpty()) {
                 return "No Rows in " + table_name + " need to be updated.";
             }
 
-            table.takeXLock(session,manager);
-            for(Row row: update_rows) {
+            table.takeXLock(session, manager);
+            for (Row row : update_rows) {
 
                 // void update(Cell primaryCell, Row newRow)
                 ArrayList<Cell> entries = new ArrayList<>(row.getEntries());
