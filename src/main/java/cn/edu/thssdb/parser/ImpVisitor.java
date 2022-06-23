@@ -421,8 +421,13 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             }
             table.releaseSLock(session);
 
-            table.takeXLock(session, manager);
-            for (Row row : update_rows) {
+            if(update_rows.isEmpty()) {
+                return "No Rows in " + table_name + " need to be updated.";
+            }
+
+            table.takeXLock(session,manager);
+            for(Row row: update_rows) {
+
                 // void update(Cell primaryCell, Row newRow)
                 ArrayList<Cell> entries = new ArrayList<>(row.getEntries());
                 entries.set(update_index, parseEntry(update_value, table.columns.get(update_index)));

@@ -172,3 +172,9 @@ insert into ddd values (15,1)
 delete from ddd where dd=19
 insert into ddd values (15,1)
 commit
+begin transaction
+update ddd set dd=19 where dd=1
+commit
+begin transaction
+update ddd set dd=19 where dd=100
+commit
