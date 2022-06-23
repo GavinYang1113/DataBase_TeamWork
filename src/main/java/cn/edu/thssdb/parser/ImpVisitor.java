@@ -409,6 +409,10 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             }
             table.releaseSLock(session);
 
+            if(update_rows.isEmpty()) {
+                return "No Rows in " + table_name + " need to be updated.";
+            }
+
             table.takeXLock(session,manager);
             for(Row row: update_rows) {
                 // void update(Cell primaryCell, Row newRow)
