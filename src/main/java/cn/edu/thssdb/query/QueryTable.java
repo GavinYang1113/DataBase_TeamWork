@@ -6,6 +6,7 @@ import cn.edu.thssdb.schema.Cell;
 import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Row;
 import cn.edu.thssdb.schema.Table;
+import jdk.nashorn.internal.ir.LiteralNode;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -50,8 +51,13 @@ public class QueryTable implements Iterator<Row> {
           this.rows.add(new_row);
         }
       }
-
-      ArrayList<Row> filtered_rows = on_filter(this.rows.iterator(), this.columns, join_condition);
+      ArrayList<Row> filtered_rows = new ArrayList<>();
+      if(join_condition.expression().get(1).comparer().children.get(0) instanceof SQLParser.Literal_valueContext){
+        filtered_rows = ImpVisitor.filter(this.rows.iterator(), this.columns, join_condition);
+      }
+      else{
+        filtered_rows = on_filter(this.rows.iterator(), this.columns, join_condition);
+      }
       this.rows = filtered_rows;
     }
 
@@ -59,8 +65,10 @@ public class QueryTable implements Iterator<Row> {
     else {
       for(Column column_left : left_table.columns){
         for(Column column_right : right_table.columns){
-          if(column_left.getColumnName().toLowerCase().equals(column_right.getColumnName().toLowerCase())){
-            common_columns.add(column_left);
+          String left_column_real_name = get_real_column_name(column_left.getColumnName().toLowerCase());
+          String right_column_real_name = get_real_column_name(column_right.getColumnName().toLowerCase());
+          if(left_column_real_name.equals(right_column_real_name)){
+            common_columns.add(column_right);
           }
         }
       }
@@ -82,7 +90,6 @@ public class QueryTable implements Iterator<Row> {
       }
       // 自然连接
       else{
-        int flag = 1;
         (this.columns = new ArrayList<>(left_table.columns)).addAll(right_table.columns);
         for(int i = 0; i < common_columns.size(); i++) {
           int temp_remove_index = ImpVisitor.get_column_index(this.columns, common_columns.get(i).getColumnName().toLowerCase());
@@ -92,8 +99,10 @@ public class QueryTable implements Iterator<Row> {
           for (Row right_row : right_table.rows) {
             Row new_row = new Row();
             new_row.getEntries().addAll(left_row.getEntries());
+            int flag = 1;
             for (Column column : common_columns){
-              if (left_row.getEntries().get(ImpVisitor.get_column_index(left_table.columns,column.getColumnName().toLowerCase())).compareTo(right_row.getEntries().get(ImpVisitor.get_column_index(right_table.columns, column.getColumnName().toLowerCase()))) != 0){
+              String common_column_real_name = get_real_column_name(column.getColumnName().toLowerCase());
+              if (left_row.getEntries().get(get_real_name_column_index(left_table.columns,common_column_real_name)).value.compareTo(right_row.getEntries().get(get_real_name_column_index(right_table.columns, common_column_real_name)).value) != 0){
                 flag = 0;
                 break;
               }
@@ -164,6 +173,24 @@ public class QueryTable implements Iterator<Row> {
       }
     }
     return return_array_list;
+  }
+
+  public static String get_real_column_name(String table_name){
+    String ret_string = "";
+    int i = table_name.indexOf('.');
+    ret_string = table_name.substring(i+1);
+    return ret_string;
+  }
+
+  public static int get_real_name_column_index(ArrayList<Column> columns, String real_column_name) {
+    String this_table_real_column_name;
+    for (int i = 0; i < columns.size(); i++) {
+      this_table_real_column_name = get_real_column_name(columns.get(i).getColumnName());
+      if (this_table_real_column_name.equals(real_column_name)) {
+        return i;
+      }
+    }
+    return -1;
   }
   @Override
   public boolean hasNext() {

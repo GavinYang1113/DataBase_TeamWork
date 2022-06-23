@@ -121,14 +121,14 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     public String visitDrop_table_stmt(SQLParser.Drop_table_stmtContext ctx) {
         try {
             Table table = GetCurrentDB().get(ctx.table_name().getText().toLowerCase());
-            table.takeXLock(session,manager);
+            table.takeXLock(session, manager);
             GetCurrentDB().drop(ctx.table_name().getText().toLowerCase());
         } catch (Exception e) {
-            if(GetCurrentDB().get(ctx.table_name().getText().toLowerCase())!=null){
+            if (GetCurrentDB().get(ctx.table_name().getText().toLowerCase()) != null) {
                 GetCurrentDB().get(ctx.table_name().getText().toLowerCase()).releaseXLock(session);
             }
             return e.getMessage();
-        }finally {
+        } finally {
 
         }
         return "Drop table " + ctx.table_name().getText() + ".";
@@ -553,28 +553,30 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         List<SQLParser.Table_queryContext> tables = ctx.table_query();
         QueryTable temp = null;
         SQLParser.ConditionContext condition = null;
-        for(int i = 0; i < tables.size(); i++) {
-            if(temp == null){
+        for (int i = 0; i < tables.size(); i++) {
+            if (temp == null) {
                 temp = get_table(tables.get(i));
-            }
-            else {
+            } else {
                 temp = new QueryTable(temp, get_table(tables.get(i)), null);
             }
 
         }
 
         //处理where
-        if(ctx.K_WHERE() != null){
-            condition = (SQLParser.ConditionContext) ctx.multiple_condition().children.get(0);
+        ArrayList<Row> result = new ArrayList<>();
+        if (ctx.K_WHERE() != null) {
+            //condition = (SQLParser.ConditionContext) ctx.multiple_condition().children.get(0);
+            result = getRowsBaseConditionViaQueryTable(ctx.multiple_condition(), temp);
+        }else{
+            result = filter(temp.rows.iterator(), temp.columns, condition);
         }
 
-        ArrayList<Row> result = filter(temp.rows.iterator(), temp.columns, condition);
         temp.rows = result;
 
         //处理select
-        if (ctx.result_column().size() == 1 && ctx.result_column().get(0).children.get(0) instanceof TerminalNode){
+        if (ctx.result_column().size() == 1 && ctx.result_column().get(0).children.get(0) instanceof TerminalNode) {
             ArrayList<String> final_column_names = new ArrayList<>();
-            for(Column column : temp.columns){
+            for (Column column : temp.columns) {
                 final_column_names.add(column.getColumnName());
             }
             return new QueryResult(temp.rows, final_column_names);
@@ -679,5 +681,64 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         return null;
     }
 
-}
+    /**
+     * 根据Querytable筛选
+     *
+     * @param mc
+     * @param table
+     * @return
+     */
+    public ArrayList<Row> getRowsBaseConditionViaQueryTable(SQLParser.Multiple_conditionContext mc, QueryTable table) {
+        try {
+            ArrayList<SQLParser.ConditionContext> condition_list = new ArrayList<SQLParser.ConditionContext>();
 
+            //加入第二个元素
+            if (mc.AND() != null || mc.OR() != null) {
+                condition_list.add(mc.multiple_condition(0).condition());
+                condition_list.add(mc.multiple_condition(1).condition());
+            } else {
+                condition_list.add(mc.condition());
+            }
+
+            //验证条件属性存在
+            for (SQLParser.ConditionContext item : condition_list) {
+                String name = item.expression(0).comparer().column_full_name().getText().toLowerCase();
+                boolean find = false;
+                for (int i = 0; i < table.columns.size(); i++) {
+                    if (table.columns.get(i).getColumnName().equals(name)) {
+                        find = true;
+                        break;
+                    }
+                }
+
+                if (!find) {
+                    return null;
+                }
+            }
+
+            //取数据，筛选满足条件的
+            ArrayList<Row> res_rows = new ArrayList<Row>();
+            boolean next = false;
+            for (SQLParser.ConditionContext item : condition_list) {
+                ArrayList<Row> temp_rows = filter(table.rows.iterator(), table.columns, item);
+                if (!next) {
+                    res_rows.addAll(temp_rows);
+                }
+                //next保证只有第二个条件表达式才能进入
+                if (mc.AND() != null && next) {
+                    res_rows.retainAll(temp_rows);
+                } else if (mc.OR() != null && next) {
+                    //取不重复并
+                    temp_rows.remove(res_rows);
+                    res_rows.addAll(temp_rows);
+                }
+                next = true;
+            }
+            return res_rows;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+}
