@@ -471,22 +471,17 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             return get_table_by_name(query.table_name(0));
         }
 
-        SQLParser.Table_queryContext left_query = query;
-        QueryTable left_table = null;
-        QueryTable right_table = null;
-        if (left_query == null) {
-            left_table = get_table_by_name(left_query.table_name(0));
-            right_table = get_table_by_name(left_query.table_name(1));
-        } else {
-            left_table = get_table(left_query);
-            right_table = get_table_by_name(query.table_name(0));
-        }
+        String left_table_name = query.children.get(0).getText();
+        String right_table_name = query.children.get(2).getText();
+        QueryTable left_table = new QueryTable(manager.getCurrentDatabase().get(left_table_name));
+        QueryTable right_table = new QueryTable(manager.getCurrentDatabase().get(right_table_name));
+
         SQLParser.ConditionContext joinCondition = null;
         if (query.K_ON() != null) {
             joinCondition = query.multiple_condition().condition();
         }
-        QueryTable cross_table = new QueryTable(left_table, right_table, joinCondition);
-        return cross_table;
+        QueryTable ret_table = new QueryTable(left_table, right_table, joinCondition);
+        return ret_table;
     }
 
     public static int get_column_index(ArrayList<Column> columns, String column_name) {
@@ -507,7 +502,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         Cell cell_compare_value = null;
 
         if (condition != null) {
-            column_name = condition.expression().get(0).comparer().column_full_name().column_name().getText().toLowerCase();
+            column_name = condition.expression().get(0).comparer().column_full_name().getText().toLowerCase();
             column_index = get_column_index(columns, column_name);
             comparator = condition.comparator();
             compare_value = condition.expression().get(1).comparer().literal_value().getText();
@@ -549,34 +544,33 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
     @Override
     public QueryResult visitSelect_stmt(SQLParser.Select_stmtContext ctx) {
+
+        // 处理from拿到table
         List<SQLParser.Table_queryContext> tables = ctx.table_query();
         QueryTable temp = null;
         SQLParser.ConditionContext condition = null;
-        for (int i = 0; i < tables.size(); i++) {
-            if (temp == null) {
+        for(int i = 0; i < tables.size(); i++) {
+            if(temp == null){
                 temp = get_table(tables.get(i));
-            } else {
+            }
+            else {
                 temp = new QueryTable(temp, get_table(tables.get(i)), null);
             }
 
         }
 
         //处理where
-        for (int i = 0; i < tables.size(); i++) {
-            if (tables.get(i).children.get(0).getText().equals("where")) {
-                condition = (SQLParser.ConditionContext) tables.get(i + 1).children.get(0);
-            } else {
-                continue;
-            }
+        if(ctx.K_WHERE() != null){
+            condition = (SQLParser.ConditionContext) ctx.multiple_condition().children.get(0);
         }
 
         ArrayList<Row> result = filter(temp.rows.iterator(), temp.columns, condition);
         temp.rows = result;
 
         //处理select
-        if (ctx.result_column().size() == 1 && ctx.result_column().get(0).children.get(0) instanceof TerminalNode) {
+        if (ctx.result_column().size() == 1 && ctx.result_column().get(0).children.get(0) instanceof TerminalNode){
             ArrayList<String> final_column_names = new ArrayList<>();
-            for (Column column : temp.columns) {
+            for(Column column : temp.columns){
                 final_column_names.add(column.getColumnName());
             }
             return new QueryResult(temp.rows, final_column_names);
