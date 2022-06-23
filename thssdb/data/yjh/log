@@ -196,3 +196,203 @@ commit
 begin transaction
 insert into t (a2,a1) values (5,'s')
 commit
+begin transaction
+insert into ddd values (1,'ww')
+commit
+begin transaction
+insert into ddd values (2,'ww')
+commit
+begin transaction
+update ddd set dddd = 'qq' where dd=2 and dddd='ww'
+commit
+begin transaction
+delete from ddd where dd=1 and dddd=23
+commit
+begin transaction
+delete from ddd where dd=1 and dddd='ee'
+commit
+begin transaction
+delete from dd where dd
+commit
+begin transaction
+delete from ddd where dd = 1 and dddd = ''
+commit
+begin transaction
+delete from ddd where dd=1 and dddd='ww'
+commit
+begin transaction
+delete from ddd where dd=1 and dddd='ww'
+commit
+begin transaction
+delete from ddd where dd=1 and dddd='ww'
+commit
+begin transaction
+delete from ddd where dd=1 and dddd='ww'
+commit
+begin transaction
+delete from ddd where dd=1 and dddd='ww'
+commit
+begin transaction
+insert into ddd values (1,''
+commit
+begin transaction
+insert into ddd values (1,'a')
+commit
+begin transaction
+insert into ddd values (2,'a')
+commit
+begin transaction
+insert into ddd values (3,'a')
+commit
+begin transaction
+delete from ddd where dddd='a' and dd=3
+commit
+begin transaction
+delete from ddd where dddd='a' and dd=3
+commit
+begin transaction
+insert into ddd values (1,"a")
+commit
+begin transaction
+insert into ddd values (1,'a')
+commit
+begin transaction
+insert into ddd values (2,'a')
+commit
+begin transaction
+insert into ddd values (3,'a')
+commit
+begin transaction
+delete from ddd where dddd='a' and dd=3
+commit
+begin transaction
+insert into ddd values (1,'a')
+commit
+begin transaction
+insert into ddd values (2,'a')
+commit
+begin transaction
+insert into ddd values (3,'a')
+commit
+begin transaction
+delete from ddd where dddd='a' and dd=3
+commit
+begin transaction
+insert into ddd values (1,'a')
+commit
+begin transaction
+insert into ddd values (2,'b')
+commit
+begin transaction
+insert into ddd values (3,'a')
+commit
+begin transaction
+insert into ddd values (4,'a')
+commit
+begin transaction
+update ddd set dd=1
+commit
+begin transaction
+update ddd set dd=5 where dddd='b'
+commit
+begin transaction
+insert into ddd values (1,'a')
+commit
+begin transaction
+insert into ddd values (1,'a')
+commit
+begin transaction
+insert into ddd values (2,'a')
+commit
+begin transaction
+insert into ddd values (3,'b')
+commit
+begin transaction
+delete from ddd where dddd='b'
+commit
+begin transaction
+insert into ddd values (1,'a')
+commit
+begin transaction
+insert into ddd values (2,'a')
+commit
+begin transaction
+insert into ddd values (3,'b')
+commit
+begin transaction
+delete from ddd where dddd='a' and dd=3
+begin transaction
+delete from ddd where dddd='a
+commit
+begin transaction
+delete from ddd where dddd='a'
+commit
+begin transaction
+delete from ddd where dddd='a'
+commit
+begin transaction
+delete from ddd where dddd='a'
+commit
+begin transaction
+insert into ddd values (1,'q')
+commit
+begin transaction
+delete from ddd where dddd='a
+commit
+begin transaction
+delete from ddd where dddd='a'
+commit
+begin transaction
+delete from ddd where dddd='a
+commit
+begin transaction
+delete from ddd where dddd='a'
+commit
+begin transaction
+delete from ddd where dddd='a
+commit
+begin transaction
+delete from ddd where dddd='a'
+commit
+begin transaction
+delete from ddd where dddd='a'
+begin transaction
+delete from ddd where dddd='a'
+begin transaction
+delete from ddd where dddd='a'
+begin transaction
+delete from ddd where dddd='a'
+commit
+begin transaction
+insert into ddd values (1,'a')
+commit
+begin transaction
+insert into ddd values (2,'a')
+commit
+begin transaction
+insert into ddd values (3,'a')
+commit
+begin transaction
+delete from ddd where dd=3 and dddd='a'
+commit
+begin transaction
+delete from ddd where dd=3 and ddddd='a'
+commit
+begin transaction
+delete from ddd where dddd='a'
+commit
+begin transaction
+insert into ddd values (1,'a')
+commit
+begin transaction
+insert into ddd values (2,'a')
+commit
+begin transaction
+insert into ddd values (3,'a')
+commit
+begin transaction
+update ddd set dddd='
+commit
+begin transaction
+update ddd set dddd='b' where dd=3
+commit

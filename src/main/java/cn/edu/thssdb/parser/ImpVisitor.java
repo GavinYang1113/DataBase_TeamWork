@@ -9,6 +9,7 @@ import cn.edu.thssdb.query.QueryTable;
 import cn.edu.thssdb.schema.*;
 import cn.edu.thssdb.type.ColumnType;
 import org.antlr.v4.runtime.CommonToken;
+import org.antlr.v4.runtime.atn.SemanticContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import cn.edu.thssdb.schema.Column.*;
 
@@ -362,30 +363,35 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public String visitDelete_stmt(SQLParser.Delete_stmtContext ctx) {
-        String table_name = ctx.table_name().getText().toLowerCase();
-        Table table = GetCurrentDB().get(table_name);
+        try {
+            String table_name = ctx.table_name().getText().toLowerCase();
+            Table table = GetCurrentDB().get(table_name);
 
-        String condition_name = ctx.multiple_condition().condition().expression(0).comparer().column_full_name().column_name().getText().toLowerCase();
-        if (getColumnIndex(table, condition_name) < 0) {
-            return new Exception("Fail to find column " + condition_name).toString();
+
+            if (ctx.K_WHERE() != null) {
+                SQLParser.Multiple_conditionContext mc = ctx.multiple_condition();
+                ArrayList<Row> delete_rows = getRowsBaseCondition(mc, table);
+                if (delete_rows == null) {
+                    return new ColumnNotExistException("").getMessage();
+                }
+                table.takeXLock(session, manager);
+                for (Row row_item : delete_rows) {
+                    table.delete(row_item);
+                }
+            } else {
+                table.takeXLock(session, manager);
+                Iterator<Row> row_iterator = table.iterator();
+                while (row_iterator.hasNext()) {
+                    Row row = row_iterator.next();
+                    table.delete(row);
+                }
+            }
+
+            return "Delete from table " + table_name + ".";
+        } catch (Exception e) {
+            return e.toString();
         }
 
-        if (ctx.K_WHERE() != null) {
-            table.takeXLock(session, manager);
-            ArrayList<Row> update_rows = filter(table.iterator(), table.columns, ctx.multiple_condition().condition());
-            for (Row row_item : update_rows) {
-                table.delete(row_item);
-            }
-        } else {
-            table.takeXLock(session, manager);
-            Iterator<Row> row_iterator = table.iterator();
-            while (row_iterator.hasNext()) {
-                Row row = row_iterator.next();
-                table.delete(row);
-            }
-        }
-
-        return "Delete from table " + table_name + ".";
     }
 
     /**
@@ -411,13 +417,14 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             int update_index = getColumnIndex(table, update_name);
             if (update_index < 0) throw new Exception("Fail to find column " + update_name);
 
-            String condition_name = ctx.multiple_condition().condition().expression(0).comparer().column_full_name().column_name().getText().toLowerCase();
-            if (getColumnIndex(table, condition_name) < 0) throw new Exception("Fail to find column " + condition_name);
-
-            ArrayList<Row> update_rows;
+            ArrayList<Row> update_rows = new ArrayList<Row>();
             table.takeSLock(session, manager);
             if (ctx.K_WHERE() != null) {
-                update_rows = filter(table.iterator(), table.columns, ctx.multiple_condition().condition());
+                SQLParser.Multiple_conditionContext mc = ctx.multiple_condition();
+                update_rows = getRowsBaseCondition(mc, table);
+                if (update_rows == null) {
+                    return new ColumnNotExistException("").getMessage();
+                }
             } else {
                 update_rows = filter(table.iterator(), table.columns, null);
             }
@@ -528,4 +535,61 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         for (SQLParser.Sql_stmtContext subCtx : ctx.sql_stmt()) ret.add(visitSql_stmt(subCtx));
         return ret;
     }
+
+    /**
+     * 根据条件获取行
+     *
+     * @param mc
+     * @param table
+     * @return
+     */
+    public ArrayList<Row> getRowsBaseCondition(SQLParser.Multiple_conditionContext mc, Table table) {
+        try {
+            ArrayList<SQLParser.ConditionContext> condition_list = new ArrayList<SQLParser.ConditionContext>();
+
+            //加入第二个元素
+            if (mc.AND() != null || mc.OR() != null) {
+                condition_list.add(mc.multiple_condition(0).condition());
+                condition_list.add(mc.multiple_condition(1).condition());
+            } else {
+                condition_list.add(mc.condition());
+            }
+
+            //验证条件属性存在
+            for (SQLParser.ConditionContext item : condition_list) {
+                String name = item.expression(0).comparer().column_full_name().column_name().getText().toLowerCase();
+
+                if (getColumnIndex(table, name) < 0) {
+                    return null;
+                }
+            }
+
+            //取数据，筛选满足条件的
+            ArrayList<Row> res_rows = new ArrayList<Row>();
+            table.takeSLock(session, manager);
+            boolean next = false;
+            for (SQLParser.ConditionContext item : condition_list) {
+                ArrayList<Row> temp_rows = filter(table.iterator(), table.columns, item);
+                if (!next) {
+                    res_rows.addAll(temp_rows);
+                }
+                //next保证只有第二个条件表达式才能进入
+                if (mc.AND() != null && next) {
+                    res_rows.retainAll(temp_rows);
+                } else if (mc.OR() != null && next) {
+                    //取不重复并
+                    temp_rows.remove(res_rows);
+                    res_rows.addAll(temp_rows);
+                }
+                next = true;
+            }
+            table.releaseSLock(session);
+            return res_rows;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
 }
+
