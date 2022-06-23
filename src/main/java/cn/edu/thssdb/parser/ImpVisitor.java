@@ -412,12 +412,11 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             int update_index = getColumnIndex(table, update_name);
             if (update_index < 0) throw new Exception("Fail to find column " + update_name);
 
-            String condition_name = ctx.multiple_condition().condition().expression(0).comparer().column_full_name().column_name().getText().toLowerCase();
-            if (getColumnIndex(table, condition_name) < 0) throw new Exception("Fail to find column " + condition_name);
-
             ArrayList<Row> update_rows;
             table.takeSLock(session, manager);
             if (ctx.K_WHERE() != null) {
+                String condition_name = ctx.multiple_condition().condition().expression(0).comparer().column_full_name().column_name().getText().toLowerCase();
+                if (getColumnIndex(table, condition_name) < 0) throw new Exception("Fail to find column " + condition_name);
                 update_rows = filter(table.iterator(), table.columns, ctx.multiple_condition().condition());
             } else {
                 update_rows = filter(table.iterator(), table.columns, null);
@@ -430,7 +429,6 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
             table.takeXLock(session, manager);
             for (Row row : update_rows) {
-
                 // void update(Cell primaryCell, Row newRow)
                 ArrayList<Cell> entries = new ArrayList<>(row.getEntries());
                 entries.set(update_index, parseEntry(update_value, table.columns.get(update_index)));
