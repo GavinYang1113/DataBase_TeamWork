@@ -367,6 +367,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         if (getColumnIndex(table, condition_name) < 0) {
             return new Exception("Fail to find column " + condition_name).toString();
         }
+        
         if (ctx.K_WHERE() != null) {
             table.takeXLock(session, manager);
             ArrayList<Row> update_rows = filter(table.iterator(), table.columns, ctx.multiple_condition().condition());
