@@ -159,3 +159,16 @@ commit
 begin transaction
 update ddd set dd=49 where dd=39
 commit
+begin transaction
+delete from ddd where 1<dd
+commit
+begin transaction
+delete from ddd where dd>10
+commit
+begin transaction
+insert into ddd values (15,1)
+delete from ddd where dd=15
+insert into ddd values (15,1)
+delete from ddd where dd=19
+insert into ddd values (15,1)
+commit

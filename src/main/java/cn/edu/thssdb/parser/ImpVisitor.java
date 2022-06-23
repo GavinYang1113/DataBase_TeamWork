@@ -230,12 +230,8 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             int column_count = table.columns.size();
             String show_data = "[" + table_name + "]\n";//表头
 
-           // table.takeSLock(session, manager);
-            Iterator<Row> rowIterator = table.iterator();
-            while (rowIterator.hasNext()) {
-                Row row = rowIterator.next();
-                System.out.println(row.toString());
-            }
+            // table.takeSLock(session, manager);
+
 
             for (int i = 0; i < column_count; i++) {
                 Column colunm_item = table.columns.get(i);
@@ -331,7 +327,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
             Row new_row = new Row(cells);
 
-            table.takeXLock(session,manager);
+            table.takeXLock(session, manager);
             table.insert(new_row);
 
         } else {
@@ -350,12 +346,12 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             Row new_row = new Row(cells);
 
 
-            table.takeXLock(session,manager);
+            table.takeXLock(session, manager);
             table.insert(new_row);
 
         }
 
-       return "Insert into " + table_name + ".";
+        return "Insert into " + table_name + ".";
     }
 
     /**
@@ -366,12 +362,27 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     public String visitDelete_stmt(SQLParser.Delete_stmtContext ctx) {
         String table_name = ctx.table_name().getText().toLowerCase();
         Table table = GetCurrentDB().get(table_name);
-        SQLParser.Multiple_conditionContext multiple_condition = ctx.multiple_condition();
-        String attrName = ctx.multiple_condition().condition().expression(0).comparer().column_full_name().column_name().getText().toLowerCase();
-        String attrValue = ctx.multiple_condition().condition().expression(1).comparer().literal_value().getText();
 
+        String condition_name = ctx.multiple_condition().condition().expression(0).comparer().column_full_name().column_name().getText().toLowerCase();
+        if (getColumnIndex(table, condition_name) < 0) {
+            return new Exception("Fail to find column " + condition_name).toString();
+        }
+        if (ctx.K_WHERE() != null) {
+            table.takeXLock(session, manager);
+            ArrayList<Row> update_rows = filter(table.iterator(), table.columns, ctx.multiple_condition().condition());
+            for (Row row_item : update_rows) {
+                table.delete(row_item);
+            }
+        } else {
+            table.takeXLock(session, manager);
+            Iterator<Row> row_iterator = table.iterator();
+            while (row_iterator.hasNext()) {
+                Row row = row_iterator.next();
+                table.delete(row);
+            }
+        }
 
-        return null;
+        return "Delete from table " + table_name + ".";
     }
 
     /**
@@ -379,8 +390,8 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      * 表格项更新
      */
     public static int getColumnIndex(Table table, String target) {
-        for(int i = 0; i < table.columns.size(); i ++)
-            if(table.columns.get(i).getColumnName().equals(target))
+        for (int i = 0; i < table.columns.size(); i++)
+            if (table.columns.get(i).getColumnName().equals(target))
                 return i;
         return -1;
     }
@@ -395,22 +406,22 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             // 需要 update 的 column 索引
             Table table = GetCurrentDB().get(table_name);
             int update_index = getColumnIndex(table, update_name);
-            if(update_index < 0) throw new Exception("Fail to find column " + update_name);
+            if (update_index < 0) throw new Exception("Fail to find column " + update_name);
 
             String condition_name = ctx.multiple_condition().condition().expression(0).comparer().column_full_name().column_name().getText().toLowerCase();
-            if(getColumnIndex(table, condition_name) < 0) throw new Exception("Fail to find column " + condition_name);
+            if (getColumnIndex(table, condition_name) < 0) throw new Exception("Fail to find column " + condition_name);
 
             ArrayList<Row> update_rows;
-            table.takeSLock(session,manager);
-            if(ctx.K_WHERE() != null) {
+            table.takeSLock(session, manager);
+            if (ctx.K_WHERE() != null) {
                 update_rows = filter(table.iterator(), table.columns, ctx.multiple_condition().condition());
-            }else {
+            } else {
                 update_rows = filter(table.iterator(), table.columns, null);
             }
             table.releaseSLock(session);
 
-            table.takeXLock(session,manager);
-            for(Row row: update_rows) {
+            table.takeXLock(session, manager);
+            for (Row row : update_rows) {
                 // void update(Cell primaryCell, Row newRow)
                 ArrayList<Cell> entries = new ArrayList<>(row.getEntries());
                 entries.set(update_index, parseEntry(update_value, table.columns.get(update_index)));
@@ -418,7 +429,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             }
 
             return "Update table " + table_name + ".";
-        }catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("error fuck!");
             return e.getMessage();
         }
@@ -431,7 +442,8 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     public QueryTable get_table(SQLParser.Table_queryContext query) {
         return null;
     }
-    public static int get_column_index (ArrayList<Column> columns, String column_name) {
+
+    public static int get_column_index(ArrayList<Column> columns, String column_name) {
         for (int i = 0; i < columns.size(); i++) {
             if (columns.get(i).getColumnName().equals(column_name)) {
                 return i;
@@ -439,7 +451,8 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         }
         return -1;
     }
-    public static ArrayList<Row> filter (Iterator<Row> it, ArrayList<Column> columns, SQLParser.ConditionContext condition){
+
+    public static ArrayList<Row> filter(Iterator<Row> it, ArrayList<Column> columns, SQLParser.ConditionContext condition) {
         ArrayList<Row> return_array_list = new ArrayList<>();
         String column_name = condition.expression().get(0).comparer().column_full_name().column_name().getText().toLowerCase();
         int column_index = get_column_index(columns, column_name);
@@ -451,24 +464,24 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             Row row = it.next();
             Cell columnValue = row.getEntries().get(column_index);
             boolean flag = false;
-            if(comparator == null) {
+            if (comparator == null) {
                 flag = true;
             } else if (comparator.EQ() != null) {
                 if (columnValue.compareTo(cell_compare_value) == 0)
                     flag = true;
-            } else if(comparator.NE() != null) {
+            } else if (comparator.NE() != null) {
                 if (columnValue.compareTo(cell_compare_value) != 0)
                     flag = true;
-            } else if(comparator.LE() != null) {
+            } else if (comparator.LE() != null) {
                 if (columnValue.compareTo(cell_compare_value) <= 0)
                     flag = true;
-            } else if(comparator.GE() != null) {
+            } else if (comparator.GE() != null) {
                 if (columnValue.compareTo(cell_compare_value) >= 0)
                     flag = true;
-            } else if(comparator.LT() != null) {
+            } else if (comparator.LT() != null) {
                 if (columnValue.compareTo(cell_compare_value) < 0)
                     flag = true;
-            } else if(comparator.GT() != null) {
+            } else if (comparator.GT() != null) {
                 if (columnValue.compareTo(cell_compare_value) > 0)
                     flag = true;
             }
