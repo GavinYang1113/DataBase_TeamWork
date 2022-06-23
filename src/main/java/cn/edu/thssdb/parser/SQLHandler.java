@@ -32,9 +32,9 @@ public class SQLHandler {
 
     public ArrayList<QueryResult> evaluate(String statement, long session) {
         String stmt_head = statement.split("\\s+")[0];
-        if (Arrays.asList(CMD_SET_WITHOUT_SELECT).contains(stmt_head.toLowerCase()) && session==0)
+        if (Arrays.asList(CMD_SET_WITHOUT_SELECT).contains(stmt_head.toLowerCase()) && session != 114514)
         {
-            manager.writeLog(statement);
+            manager.writeLog(statement, session);
         }
         System.out.println("session:" +session + "  " + statement);
         if (statement.equals(Global.LOG_BEGIN_TRANSACTION)) {

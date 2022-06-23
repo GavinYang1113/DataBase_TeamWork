@@ -61,7 +61,11 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         if (ctx.use_db_stmt() != null) return new QueryResult(visitUse_db_stmt(ctx.use_db_stmt()));
         if (ctx.create_table_stmt() != null) return new QueryResult(visitCreate_table_stmt(ctx.create_table_stmt()));
         if (ctx.drop_table_stmt() != null) return new QueryResult(visitDrop_table_stmt(ctx.drop_table_stmt()));
-        if (ctx.insert_stmt() != null) return new QueryResult(visitInsert_stmt(ctx.insert_stmt()));
+        if (ctx.insert_stmt() != null) {
+            String ret = visitInsert_stmt(ctx.insert_stmt());
+            System.out.println(ret);
+            return new QueryResult(ret);
+        }
         if (ctx.delete_stmt() != null) return new QueryResult(visitDelete_stmt(ctx.delete_stmt()));
         if (ctx.update_stmt() != null) return new QueryResult(visitUpdate_stmt(ctx.update_stmt()));
         if (ctx.select_stmt() != null) return visitSelect_stmt(ctx.select_stmt());
@@ -274,7 +278,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      */
     @Override
     public String visitInsert_stmt(SQLParser.Insert_stmtContext ctx) {
-
+        System.out.println("Insert!!!!!!!!!!!!!!");
         System.out.println(Thread.currentThread().getName());
         String table_name = ctx.table_name().getText().toLowerCase();
         Table table = GetCurrentDB().get(table_name);
@@ -361,7 +365,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             table.insert(new_row);
 
         }
-
+        System.out.println("Inserted succesfully!");
         return "Insert into " + table_name + ".";
     }
 
