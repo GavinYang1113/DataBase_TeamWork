@@ -318,6 +318,10 @@ public class Table implements Iterable<Row> {
         }
     }
 
+    public int getPrimaryIndex() {
+        return this.primaryIndex;
+    }
+
     @Override
     public Iterator<Row> iterator() {
         try {

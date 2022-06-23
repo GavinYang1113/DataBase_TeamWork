@@ -1,6 +1,13 @@
 package cn.edu.thssdb.query;
 
+import cn.edu.thssdb.parser.ImpVisitor;
+import cn.edu.thssdb.parser.SQLParser;
+import cn.edu.thssdb.schema.Cell;
+import cn.edu.thssdb.schema.Column;
 import cn.edu.thssdb.schema.Row;
+import cn.edu.thssdb.schema.Table;
+
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 
@@ -12,9 +19,7 @@ import java.util.LinkedList;
 
 public class QueryTable implements Iterator<Row> {
 
-  QueryTable() {
-    // TODO
-  }
+
 
   @Override
   public boolean hasNext() {

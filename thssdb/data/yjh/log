@@ -127,3 +127,35 @@ commit
 begin transaction
 insert into ddd values (6996,1)
 commit
+begin transaction
+update ddd set dddd=2 where dd=1
+commit
+begin transaction
+update ddd set dddd=3 where dd=1
+commit
+begin transaction
+update ddd set dddd=2 where dd=1
+commit
+begin transaction
+update ddd set dddd=2 where dd=1
+commit
+begin transaction
+update ddd set dddd=2 where dd=1
+commit
+begin transaction
+update ddd set dddd=2 where dd=1
+commit
+begin transaction
+update ddd set dddd=2 where dd=1
+commit
+begin transaction
+insert into ddd values (37,1)
+commit
+begin transaction
+insert into ddd values (37,1)
+update ddd set dd=39 where dd=37
+insert into ddd values (39,1)
+commit
+begin transaction
+update ddd set dd=49 where dd=39
+commit

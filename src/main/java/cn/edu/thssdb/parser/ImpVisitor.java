@@ -5,16 +5,20 @@ package cn.edu.thssdb.parser;
 
 import cn.edu.thssdb.exception.*;
 import cn.edu.thssdb.query.QueryResult;
+import cn.edu.thssdb.query.QueryTable;
 import cn.edu.thssdb.schema.*;
 import cn.edu.thssdb.type.ColumnType;
+import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.tree.ParseTree;
-
+import cn.edu.thssdb.schema.Column.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.locks.Condition;
+
+import static cn.edu.thssdb.schema.Column.parseEntry;
 
 /**
  * When use SQL sentence, e.g., "SELECT avg(A) FROM TableX;"
@@ -260,7 +264,6 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     /**
      * TODO
      * 表格项插入
-     * 此处不检查主键重复，table.insert里已实现
      */
     @Override
     public String visitInsert_stmt(SQLParser.Insert_stmtContext ctx) {
@@ -328,6 +331,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
             Row new_row = new Row(cells);
 
+            table.takeXLock(session,manager);
             table.insert(new_row);
 
         } else {
@@ -374,17 +378,110 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
      * TODO
      * 表格项更新
      */
+    public static int getColumnIndex(Table table, String target) {
+        for(int i = 0; i < table.columns.size(); i ++)
+            if(table.columns.get(i).getColumnName().equals(target))
+                return i;
+        return -1;
+    }
+
     @Override
     public String visitUpdate_stmt(SQLParser.Update_stmtContext ctx) {
-        return null;
+        try {
+            String table_name = ctx.table_name().getText().toLowerCase();
+            String update_name = ctx.column_name().getText().toLowerCase();
+            String update_value = ctx.expression().comparer().literal_value().getText();
+
+            // 需要 update 的 column 索引
+            Table table = GetCurrentDB().get(table_name);
+            int update_index = getColumnIndex(table, update_name);
+            if(update_index < 0) throw new Exception("Fail to find column " + update_name);
+
+            String condition_name = ctx.multiple_condition().condition().expression(0).comparer().column_full_name().column_name().getText().toLowerCase();
+            if(getColumnIndex(table, condition_name) < 0) throw new Exception("Fail to find column " + condition_name);
+
+            ArrayList<Row> update_rows;
+            table.takeSLock(session,manager);
+            if(ctx.K_WHERE() != null) {
+                update_rows = filter(table.iterator(), table.columns, ctx.multiple_condition().condition());
+            }else {
+                update_rows = filter(table.iterator(), table.columns, null);
+            }
+            table.releaseSLock(session);
+
+            table.takeXLock(session,manager);
+            for(Row row: update_rows) {
+                // void update(Cell primaryCell, Row newRow)
+                ArrayList<Cell> entries = new ArrayList<>(row.getEntries());
+                entries.set(update_index, parseEntry(update_value, table.columns.get(update_index)));
+                table.update(row.getEntries().get(table.getPrimaryIndex()), new Row(entries));
+            }
+
+            return "Update table " + table_name + ".";
+        }catch (Exception e) {
+            System.out.println("error fuck!");
+            return e.getMessage();
+        }
     }
 
     /**
      * TODO
      * 表格项查询
      */
+    public QueryTable get_table(SQLParser.Table_queryContext query) {
+        return null;
+    }
+    public static int get_column_index (ArrayList<Column> columns, String column_name) {
+        for (int i = 0; i < columns.size(); i++) {
+            if (columns.get(i).getColumnName().equals(column_name)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+    public static ArrayList<Row> filter (Iterator<Row> it, ArrayList<Column> columns, SQLParser.ConditionContext condition){
+        ArrayList<Row> return_array_list = new ArrayList<>();
+        String column_name = condition.expression().get(0).comparer().column_full_name().column_name().getText().toLowerCase();
+        int column_index = get_column_index(columns, column_name);
+        SQLParser.ComparatorContext comparator = condition.comparator();
+        String compare_value = condition.expression().get(1).comparer().literal_value().getText();
+        Cell cell_compare_value = parseEntry(compare_value, columns.get(column_index));
+
+        while (it.hasNext()) {
+            Row row = it.next();
+            Cell columnValue = row.getEntries().get(column_index);
+            boolean flag = false;
+            if(comparator == null) {
+                flag = true;
+            } else if (comparator.EQ() != null) {
+                if (columnValue.compareTo(cell_compare_value) == 0)
+                    flag = true;
+            } else if(comparator.NE() != null) {
+                if (columnValue.compareTo(cell_compare_value) != 0)
+                    flag = true;
+            } else if(comparator.LE() != null) {
+                if (columnValue.compareTo(cell_compare_value) <= 0)
+                    flag = true;
+            } else if(comparator.GE() != null) {
+                if (columnValue.compareTo(cell_compare_value) >= 0)
+                    flag = true;
+            } else if(comparator.LT() != null) {
+                if (columnValue.compareTo(cell_compare_value) < 0)
+                    flag = true;
+            } else if(comparator.GT() != null) {
+                if (columnValue.compareTo(cell_compare_value) > 0)
+                    flag = true;
+            }
+            if (flag) {
+                return_array_list.add(row);
+            }
+        }
+        return return_array_list;
+    }
+
     @Override
     public QueryResult visitSelect_stmt(SQLParser.Select_stmtContext ctx) {
+
         return null;
     }
 
