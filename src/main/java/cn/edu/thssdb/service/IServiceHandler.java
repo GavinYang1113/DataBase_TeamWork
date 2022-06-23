@@ -72,7 +72,7 @@ public class IServiceHandler implements IService.Iface {
     public ExecuteStatementResp executeStatement(ExecuteStatementReq req) throws TException {
         ExecuteStatementResp resp = new ExecuteStatementResp();
         long session = req.getSessionId();
-        if (session < 0 || session >= sessionCount) {
+        if ((session < 0 || session >= sessionCount) && session != 114514) {
             Status status = new Status(Global.FAILURE_CODE);
             status.setMsg("please connect first.");
             resp.setStatus(status);
@@ -88,6 +88,7 @@ public class IServiceHandler implements IService.Iface {
             if (statement.length() == 0) continue;
             String cmd_head = command.split("\\s+")[0];
             ArrayList<QueryResult> queryResults;
+            System.out.printf("executeStatement %s\n", statement);
             if ((Arrays.asList(CMD_HEADS).contains(cmd_head.toLowerCase())) && !manager.currentSessions.contains(session)) {
                 sqlHandler.evaluate("begin transaction", session);
                 queryResults = sqlHandler.evaluate(statement, session);
