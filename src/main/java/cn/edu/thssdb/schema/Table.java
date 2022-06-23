@@ -188,10 +188,9 @@ public class Table implements Iterable<Row> {
         }
     }
 
-    public void insert(Row row, Manager manager, Long session) {
+    public void insert(Row row) {
         try {
             // TODO lock control
-            manager.x_lockDict.get(session).add(tableName);
             this.checkRowValidInTable(row);
             if (this.containsRow(row))
                 throw new DuplicateKeyException();
@@ -204,8 +203,6 @@ public class Table implements Iterable<Row> {
     public void delete(Row row) {
         try {
             // TODO lock control.
-
-            lock.writeLock().lock();
             this.checkRowValidInTable(row);
             if (!this.containsRow(row))
                 throw new KeyNotExistException();
@@ -218,7 +215,6 @@ public class Table implements Iterable<Row> {
     public void update(Cell primaryCell, Row newRow) {
         try {
             // TODO lock control.
-            lock.writeLock().lock();
             this.checkRowValidInTable(newRow);
             Row oldRow = this.get(primaryCell);
             if (this.containsRow(newRow))
@@ -289,7 +285,6 @@ public class Table implements Iterable<Row> {
     public void dropTable() { // remove table data file
         try {
             // TODO lock control.
-            lock.writeLock().lock();
             File tableFolder = new File(this.getTableFolderPath());
             if (!tableFolder.exists() ? !tableFolder.mkdirs() : !tableFolder.isDirectory())
                 throw new FileIOException(this.getTableFolderPath() + " when dropTable");
@@ -298,18 +293,10 @@ public class Table implements Iterable<Row> {
                 throw new FileIOException(this.getTablePath() + " when dropTable");
         } finally {
             // TODO lock control.
-            lock.writeLock().unlock();
         }
     }
 
-    public void releaseLock() {
-        lock.writeLock().unlock();
-        lock.readLock().unlock();
-    }
-
-
     // Operations involving logic expressions.
-
 
     // Operations
 

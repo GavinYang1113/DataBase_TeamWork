@@ -328,7 +328,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
             Row new_row = new Row(cells);
 
-            table.insert(new_row,manager,session);
+            table.insert(new_row);
 
         } else {
 
@@ -347,7 +347,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
 
             table.takeXLock(session,manager);
-            table.insert(new_row,manager,session);
+            table.insert(new_row);
 
         }
 
