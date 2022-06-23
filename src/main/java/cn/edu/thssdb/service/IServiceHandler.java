@@ -32,7 +32,9 @@ public class IServiceHandler implements IService.Iface {
     private final static String UPDATE = "update";
     private final static String DELETE = "delete";
     private final static String SELECT = "select";
-    private final static String[] CMD_HEADS = {INSERT, UPDATE, DELETE, SELECT};
+    private final static String CREATE = "create";
+    private final static String DROP = "drop";
+    private final static String[] CMD_HEADS = {INSERT, UPDATE, DELETE, SELECT,CREATE,DROP};
     public static SQLHandler sqlHandler;
 
     public IServiceHandler() {

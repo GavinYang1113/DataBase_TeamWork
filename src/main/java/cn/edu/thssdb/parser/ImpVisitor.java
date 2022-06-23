@@ -116,9 +116,16 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
     @Override
     public String visitDrop_table_stmt(SQLParser.Drop_table_stmtContext ctx) {
         try {
+            Table table = GetCurrentDB().get(ctx.table_name().getText().toLowerCase());
+            table.takeXLock(session,manager);
             GetCurrentDB().drop(ctx.table_name().getText().toLowerCase());
         } catch (Exception e) {
+            if(GetCurrentDB().get(ctx.table_name().getText().toLowerCase())!=null){
+                GetCurrentDB().get(ctx.table_name().getText().toLowerCase()).releaseXLock(session);
+            }
             return e.getMessage();
+        }finally {
+
         }
         return "Drop table " + ctx.table_name().getText() + ".";
     }
@@ -445,7 +452,6 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
 
             return "Update table " + table_name + ".";
         } catch (Exception e) {
-            System.out.println("error fuck!");
             return e.getMessage();
         }
     }
