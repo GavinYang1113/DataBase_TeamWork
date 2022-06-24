@@ -14,10 +14,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import cn.edu.thssdb.schema.Column.*;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.concurrent.locks.Condition;
 
 import static cn.edu.thssdb.schema.Column.parseEntry;
@@ -567,7 +564,7 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         if (ctx.K_WHERE() != null) {
             //condition = (SQLParser.ConditionContext) ctx.multiple_condition().children.get(0);
             result = getRowsBaseConditionViaQueryTable(ctx.multiple_condition(), temp);
-        }else{
+        } else {
             result = filter(temp.rows.iterator(), temp.columns, condition);
         }
 
@@ -579,7 +576,15 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             for (Column column : temp.columns) {
                 final_column_names.add(column.getColumnName());
             }
-            return new QueryResult(temp.rows, final_column_names);
+            //利用插入集合是否成功去重
+            HashSet<Row> unique_set = new HashSet<Row>();
+            ArrayList<Row> unique_rows = new ArrayList<Row>();
+            for (Row item : temp.rows) {
+                if (unique_set.add(item)) {
+                    unique_rows.add(item);
+                }
+            }
+            return new QueryResult(unique_rows, final_column_names);
         }
         List<SQLParser.Result_columnContext> columns = ctx.result_column();
         ArrayList<Integer> column_indexs = new ArrayList<>();
@@ -600,7 +605,17 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
             final_rows.add(new Row(finalRowEntries));
         }
 
-        return new QueryResult(final_rows, final_column_names);
+        //利用插入集合是否成功去重
+        HashSet<Row> unique_set = new HashSet<Row>();
+        ArrayList<Row> unique_rows = new ArrayList<Row>();
+        for (Row item : final_rows) {
+            if (unique_set.add(item)) {
+                unique_rows.add(item);
+            }
+        }
+
+
+        return new QueryResult(unique_rows, final_column_names);
     }
 
     /**
