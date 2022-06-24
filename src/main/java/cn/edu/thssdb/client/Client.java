@@ -166,7 +166,7 @@ public class Client {
             if (i != column_size - 1) column_str.append(", ");
           }
           println(column_str.toString());
-          println("----------------------------------------------------------------");
+          println("---------------------------------------");
 
           for (List<String> row : resp.rowList) {
             StringBuilder row_str = new StringBuilder();
@@ -184,6 +184,8 @@ public class Client {
             println(column);
           }
         }
+        println("---------------------------------------");
+
       }
     } catch (TException e) {
       logger.error(e.getMessage());

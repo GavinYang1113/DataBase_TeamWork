@@ -550,14 +550,19 @@ public class ImpVisitor extends SQLBaseVisitor<Object> {
         List<SQLParser.Table_queryContext> tables = ctx.table_query();
         QueryTable temp = null;
         SQLParser.ConditionContext condition = null;
+
+
         for (int i = 0; i < tables.size(); i++) {
+            Table temp_table = GetCurrentDB().get(tables.get(i).table_name().get(0).getChild(0).getText());
+            temp_table.takeSLock(session, manager);
             if (temp == null) {
                 temp = get_table(tables.get(i));
             } else {
                 temp = new QueryTable(temp, get_table(tables.get(i)), null);
             }
-
+            temp_table.releaseSLock(session);
         }
+
 
         //处理where
         ArrayList<Row> result = new ArrayList<>();

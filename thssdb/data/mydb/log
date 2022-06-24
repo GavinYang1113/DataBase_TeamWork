@@ -1,2 +1,32 @@
 0|begin transaction
+0|insert into t1 values (12,'d')
+1|begin transaction
+0|commit
+1|commit
+1|begin transaction
+1|commit
+1|begin transaction
+1|insert into t2 values (1,'Sichuan')
+1|commit
+1|begin transaction
+1|insert into t2 values (5,'Tianjin')
+0|begin transaction
+0|commit
+0|begin transaction
+0|commit
+0|begin transaction
+1|commit
+0|commit
+1|begin transaction
+1|insert into t2 values (5,'Tianjin')
+1|insert into t2 values (9,'Tianjin')
+0|begin transaction
+0|commit
+0|begin transaction
+1|commit
+0|commit
+1|begin transaction
+1|insert into t2 values (15,'Tianjin')
+0|begin transaction
+1|commit
 0|commit
