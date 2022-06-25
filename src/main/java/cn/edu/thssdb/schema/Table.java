@@ -215,8 +215,8 @@ public class Table implements Iterable<Row> {
         try {
             // TODO lock control.
             this.checkRowValidInTable(newRow);
-            Row oldRow = this.get(primaryCell);
-            if (this.containsRow(newRow))
+//      Row oldRow = this.get(primaryCell);
+            if(newRow.getEntries().get(this.primaryIndex).compareTo(primaryCell)!=0&&this.containsRow(newRow))
                 throw new DuplicateKeyException();   // 要么删并插入，要么抛出异常
             this.index.remove(primaryCell);
             this.index.put(newRow.getEntries().get(this.primaryIndex), newRow);
